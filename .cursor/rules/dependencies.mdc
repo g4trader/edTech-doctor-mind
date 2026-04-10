@@ -1,0 +1,14 @@
+---
+description: Autonomia para instalar dependências (npm, pip, Docker, etc.)
+alwaysApply: true
+---
+
+# Dependências
+
+O agente tem **autonomia explícita** para instalar ou atualizar dependências necessárias ao projeto, sem pedir confirmação prévia a cada pacote.
+
+- **Frontend** (`frontend/`): `npm install`, adicionar pacotes ao `package.json` quando fizer sentido para a tarefa.
+- **Backend** (`backend/`): `pip install` no venv do projeto; atualizar `requirements.txt` quando novas bibliotecas forem adicionadas.
+- **Infra**: `docker compose`, imagens ou serviços auxiliares quando a funcionalidade exigir.
+
+Prefira versões compatíveis com o stack existente e documente mudanças relevantes no `README` apenas quando afetarem como rodar o projeto.

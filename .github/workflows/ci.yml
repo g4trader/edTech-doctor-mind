@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: doctor
+          POSTGRES_PASSWORD: doctor
+          POSTGRES_DB: doctor_mind_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U doctor -d doctor_mind_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+        working-directory: backend
+      - name: Testes Python
+        run: pytest tests/ -v --tb=short
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+          DATABASE_URL: postgresql+asyncpg://doctor:doctor@localhost:5432/doctor_mind_test
+          DATABASE_CONNECT_TIMEOUT: 30
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependências
+        run: npm install
+        working-directory: frontend
+      - name: Testes Vitest
+        run: npm run test
+        working-directory: frontend
+      - name: Build Next.js
+        run: npm run build
+        working-directory: frontend
