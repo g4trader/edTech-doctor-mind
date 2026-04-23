@@ -1,9 +1,23 @@
-const base = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 const TOKEN_KEY = "doctor-mind-token";
+
+function resolveBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configured) {
+    return configured;
+  }
+  if (typeof window !== "undefined") {
+    const { hostname } = window.location;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://127.0.0.1:8000";
+    }
+    return "";
+  }
+  return "http://127.0.0.1:8000";
+}
 
 export function apiUrl(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base.replace(/\/$/, "")}${p}`;
+  return `${resolveBaseUrl().replace(/\/$/, "")}${p}`;
 }
 
 export function getStoredToken(): string | null {

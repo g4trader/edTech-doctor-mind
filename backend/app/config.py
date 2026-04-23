@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +9,11 @@ class Settings(BaseSettings):
         "postgresql+asyncpg://doctor:doctor@localhost:5432/doctor_mind"
     )
     cors_origins: str = "http://localhost:3000"
+    cors_origin_regex: str | None = None
+    cors_allow_credentials: bool = False
+
+    auto_init_db: bool = True
+    auto_seed_demo_data: bool = True
 
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_chat_model: str = "llama3.2"
@@ -15,6 +21,13 @@ class Settings(BaseSettings):
 
     rag_top_k: int = 4
     rag_min_similarity: float = 0.25
+
+    @field_validator("cors_origin_regex", mode="before")
+    @classmethod
+    def empty_regex_as_none(cls, value: str | None) -> str | None:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @property
     def cors_origins_list(self) -> list[str]:

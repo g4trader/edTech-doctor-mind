@@ -118,6 +118,69 @@ Senha: admin12345
 - `frontend` sobe o Next.js em `:3000`
 - o backend aponta para `host.docker.internal:11434` para encontrar o Ollama do host quando ele estiver rodando
 
+## Deploy na Vercel
+
+O repositório está preparado para deploy em **dois projetos Vercel**:
+
+- `frontend/` como projeto Next.js
+- `backend/` como projeto FastAPI/Python
+
+### 1. Projeto `backend`
+
+No dashboard da Vercel, crie um projeto apontando para este repositório com **Root Directory** = `backend`.
+
+Arquivos relevantes:
+
+- `backend/index.py` expõe a aplicação FastAPI no entrypoint que a Vercel reconhece
+- `backend/vercel.json` limita o bundle da função Python
+
+Variáveis recomendadas no projeto `backend`:
+
+```bash
+DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DBNAME
+CORS_ORIGINS=https://SEU-FRONTEND.vercel.app
+# Opcional para liberar previews da Vercel:
+CORS_ORIGIN_REGEX=https://.*\.vercel\.app
+CORS_ALLOW_CREDENTIALS=false
+
+# Primeiros deploys / ambiente demo
+AUTO_INIT_DB=true
+AUTO_SEED_DEMO_DATA=true
+
+# Chat/RAG só funciona se existir uma instância acessível pela internet
+OLLAMA_BASE_URL=https://seu-ollama-ou-gateway.exemplo.com
+OLLAMA_CHAT_MODEL=llama3.2
+OLLAMA_EMBED_MODEL=nomic-embed-text
+```
+
+Observações:
+
+- `DATABASE_URL` precisa apontar para um PostgreSQL com extensão `pgvector`
+- `AUTO_INIT_DB` e `AUTO_SEED_DEMO_DATA` podem ser desativados depois da inicialização inicial para reduzir trabalho em cold start
+- se `OLLAMA_BASE_URL` não estiver acessível pela internet, a API sobe normalmente, mas o chat/RAG fica indisponível
+
+### 2. Projeto `frontend`
+
+Crie outro projeto na Vercel com **Root Directory** = `frontend`.
+
+Variável obrigatória:
+
+```bash
+NEXT_PUBLIC_API_URL=https://SEU-BACKEND.vercel.app
+```
+
+Se essa variável não for definida, o frontend usa:
+
+- `http://127.0.0.1:8000` em desenvolvimento local
+- a mesma origem (`/api/...`) fora do ambiente local
+
+### 3. Fluxo sugerido
+
+1. Suba o `backend` primeiro e valide `https://SEU-BACKEND.vercel.app/health`
+2. Configure `NEXT_PUBLIC_API_URL` no `frontend`
+3. Faça o deploy do `frontend`
+4. Ajuste `CORS_ORIGINS` no `backend` para a URL final do frontend
+
 ## MVP atual
 
 - Autenticação com sessão via token

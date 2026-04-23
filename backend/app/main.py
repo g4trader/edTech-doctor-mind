@@ -15,8 +15,10 @@ from app.init_db import bootstrap_data, init_models
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    await init_models()
-    await bootstrap_data()
+    if settings.auto_init_db:
+        await init_models()
+    if settings.auto_seed_demo_data:
+        await bootstrap_data()
     yield
 
 
@@ -30,7 +32,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
+    allow_origin_regex=settings.cors_origin_regex,
+    allow_credentials=settings.cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -3,6 +3,7 @@ import { apiUrl, apiJson } from "./api";
 
 describe("apiUrl", () => {
   const orig = process.env.NEXT_PUBLIC_API_URL;
+  const origWindow = global.window;
 
   afterEach(() => {
     if (orig !== undefined) {
@@ -10,6 +11,7 @@ describe("apiUrl", () => {
     } else {
       delete process.env.NEXT_PUBLIC_API_URL;
     }
+    global.window = origWindow;
   });
 
   it("concatena base e caminho com barra", () => {
@@ -25,6 +27,16 @@ describe("apiUrl", () => {
   it("remove barra final da base", () => {
     process.env.NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000/";
     expect(apiUrl("/x")).toBe("http://127.0.0.1:8000/x");
+  });
+
+  it("usa mesma origem em produção quando a env não está definida", () => {
+    delete process.env.NEXT_PUBLIC_API_URL;
+    global.window = {
+      location: {
+        hostname: "doctor-mind.vercel.app",
+      },
+    } as Window & typeof globalThis;
+    expect(apiUrl("/api/health")).toBe("/api/health");
   });
 });
 
