@@ -29,14 +29,16 @@ describe("apiUrl", () => {
     expect(apiUrl("/x")).toBe("http://127.0.0.1:8000/x");
   });
 
-  it("usa mesma origem em produção quando a env não está definida", () => {
+  it("exige env em produção quando a env não está definida", () => {
     delete process.env.NEXT_PUBLIC_API_URL;
     global.window = {
       location: {
         hostname: "doctor-mind.vercel.app",
       },
     } as Window & typeof globalThis;
-    expect(apiUrl("/api/health")).toBe("/api/health");
+    expect(() => apiUrl("/api/health")).toThrow(
+      "NEXT_PUBLIC_API_URL is required outside local development.",
+    );
   });
 });
 

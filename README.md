@@ -118,36 +118,43 @@ Senha: admin12345
 - `frontend` sobe o Next.js em `:3000`
 - o backend aponta para `host.docker.internal:11434` para encontrar o Ollama do host quando ele estiver rodando
 
-## Deploy na Vercel
+## Deploy
 
-O repositório está preparado para deploy em **dois projetos Vercel**:
+Arquitetura alvo:
 
-- `frontend/` como projeto Next.js
-- `backend/` como projeto FastAPI/Python
+- `frontend/` na **Vercel**
+- `backend/` no **Google Cloud Run**
 
-### 1. Projeto `backend`
+### Frontend na Vercel
 
-No dashboard da Vercel, crie um projeto apontando para este repositório com **Root Directory** = `backend`.
+Crie um projeto Vercel com **Root Directory** = `frontend`.
 
-Arquivos relevantes:
+Variável obrigatória:
 
-- `backend/index.py` expõe a aplicação FastAPI no entrypoint que a Vercel reconhece
-- `backend/vercel.json` limita o bundle da função Python
+```bash
+NEXT_PUBLIC_API_URL=https://SEU-BACKEND-URL.run.app
+```
 
-Variáveis recomendadas no projeto `backend`:
+Comportamento:
+
+- em desenvolvimento local, sem env definida, o frontend usa `http://127.0.0.1:8000`
+- fora do ambiente local, `NEXT_PUBLIC_API_URL` é obrigatória
+
+### Backend no Google Cloud Run
+
+O container do backend já está preparado para Cloud Run em `docker/backend.Dockerfile`, incluindo suporte à variável `PORT` exigida pela plataforma.
+
+Variáveis recomendadas no serviço:
 
 ```bash
 DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DBNAME
 CORS_ORIGINS=https://SEU-FRONTEND.vercel.app
-# Opcional para liberar previews da Vercel:
 CORS_ORIGIN_REGEX=https://.*\.vercel\.app
 CORS_ALLOW_CREDENTIALS=false
 
-# Primeiros deploys / ambiente demo
 AUTO_INIT_DB=true
 AUTO_SEED_DEMO_DATA=true
 
-# Chat/RAG só funciona se existir uma instância acessível pela internet
 OLLAMA_BASE_URL=https://seu-ollama-ou-gateway.exemplo.com
 OLLAMA_CHAT_MODEL=llama3.2
 OLLAMA_EMBED_MODEL=nomic-embed-text
@@ -155,31 +162,27 @@ OLLAMA_EMBED_MODEL=nomic-embed-text
 
 Observações:
 
-- `DATABASE_URL` precisa apontar para um PostgreSQL com extensão `pgvector`
-- `AUTO_INIT_DB` e `AUTO_SEED_DEMO_DATA` podem ser desativados depois da inicialização inicial para reduzir trabalho em cold start
-- se `OLLAMA_BASE_URL` não estiver acessível pela internet, a API sobe normalmente, mas o chat/RAG fica indisponível
+- `DATABASE_URL` precisa apontar para PostgreSQL com extensão `pgvector`
+- `AUTO_INIT_DB` e `AUTO_SEED_DEMO_DATA` podem ser desligados após a inicialização inicial
+- se `OLLAMA_BASE_URL` não estiver acessível pela internet, a API sobe, mas o chat/RAG não funciona
 
-### 2. Projeto `frontend`
-
-Crie outro projeto na Vercel com **Root Directory** = `frontend`.
-
-Variável obrigatória:
+Exemplo de fluxo com `gcloud`:
 
 ```bash
-NEXT_PUBLIC_API_URL=https://SEU-BACKEND.vercel.app
+gcloud builds submit --tag gcr.io/SEU-PROJETO/doctor-mind-backend -f docker/backend.Dockerfile .
+gcloud run deploy doctor-mind-backend \
+  --image gcr.io/SEU-PROJETO/doctor-mind-backend \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated
 ```
 
-Se essa variável não for definida, o frontend usa:
+### Ordem sugerida
 
-- `http://127.0.0.1:8000` em desenvolvimento local
-- a mesma origem (`/api/...`) fora do ambiente local
-
-### 3. Fluxo sugerido
-
-1. Suba o `backend` primeiro e valide `https://SEU-BACKEND.vercel.app/health`
-2. Configure `NEXT_PUBLIC_API_URL` no `frontend`
-3. Faça o deploy do `frontend`
-4. Ajuste `CORS_ORIGINS` no `backend` para a URL final do frontend
+1. Fazer deploy do backend no Cloud Run
+2. Validar `https://SEU-BACKEND-URL.run.app/health`
+3. Configurar `NEXT_PUBLIC_API_URL` no projeto da Vercel
+4. Fazer deploy do frontend
 
 ## MVP atual
 

@@ -10,7 +10,7 @@ function resolveBaseUrl(): string {
     if (hostname === "localhost" || hostname === "127.0.0.1") {
       return "http://127.0.0.1:8000";
     }
-    return "";
+    throw new Error("NEXT_PUBLIC_API_URL is required outside local development.");
   }
   return "http://127.0.0.1:8000";
 }
