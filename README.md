@@ -9,16 +9,31 @@ Plataforma EdTech de medicina em formato de assinatura. O aluno acessa **conteú
 | Frontend | React, Next.js 15 (App Router), Tailwind |
 | Backend | Python 3.12+, FastAPI, SQLAlchemy async |
 | SQL | PostgreSQL 16 com extensão **pgvector** |
-| IA | **Ollama** (gratuito, local): modelo de chat + embeddings para RAG |
+| IA | **Hugging Face Inference Providers** (gratuito para teste, online) ou **Ollama** (local) |
 
 ## Pré-requisitos
 
 - Docker (para o banco) ou PostgreSQL com pgvector
 - Python 3.12+
 - Node.js 18+ (recomendado 20+)
-- [Ollama](https://ollama.com) instalado e em execução
+- Uma destas opções:
+  - [Hugging Face](https://huggingface.co) com `HF_TOKEN` para usar IA online
+  - [Ollama](https://ollama.com) instalado e em execução para uso local
 
-### Modelos Ollama (gratuitos, locais)
+### Opção A: Hugging Face (online)
+
+Preencha em `backend/.env`:
+
+```bash
+AI_BACKEND=auto
+HF_TOKEN=hf_xxx
+HF_CHAT_MODEL=meta-llama/Llama-3.1-8B-Instruct:cerebras
+HF_EMBED_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+Com `AI_BACKEND=auto`, o backend usa Hugging Face quando `HF_TOKEN` existe; sem token, cai para Ollama.
+
+### Opção B: Modelos Ollama (gratuitos, locais)
 
 ```bash
 ollama pull llama3.2
@@ -82,7 +97,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Documentação interativa: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-Na primeira subida, o sistema cria tabelas, especialidades de exemplo, conteúdos, provas, usuários demo, mentorias e tenta popular o RAG (se o Ollama estiver disponível).
+Na primeira subida, o sistema cria tabelas, especialidades de exemplo, conteúdos, provas, usuários demo, mentorias e tenta popular o RAG quando houver backend de embeddings disponível.
 
 ### 4. Frontend
 
@@ -116,7 +131,8 @@ Senha: admin12345
 - `db` usa PostgreSQL 16 com `pgvector`
 - `backend` expõe a API FastAPI em `:8000`
 - `frontend` sobe o Next.js em `:3000`
-- o backend aponta para `host.docker.internal:11434` para encontrar o Ollama do host quando ele estiver rodando
+- com `HF_TOKEN`, o backend usa IA online
+- sem `HF_TOKEN`, o backend aponta para `host.docker.internal:11434` para encontrar o Ollama do host quando ele estiver rodando
 
 ## Deploy
 
@@ -167,13 +183,19 @@ AUTO_SEED_DEMO_DATA=true
 OLLAMA_BASE_URL=https://seu-ollama-ou-gateway.exemplo.com
 OLLAMA_CHAT_MODEL=llama3.2
 OLLAMA_EMBED_MODEL=nomic-embed-text
+
+AI_BACKEND=auto
+HF_TOKEN=hf_xxx
+HF_CHAT_MODEL=meta-llama/Llama-3.1-8B-Instruct:cerebras
+HF_EMBED_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 ```
 
 Observações:
 
 - `DATABASE_URL` precisa apontar para PostgreSQL com extensão `pgvector`
 - `AUTO_INIT_DB` e `AUTO_SEED_DEMO_DATA` podem ser desligados após a inicialização inicial
-- se `OLLAMA_BASE_URL` não estiver acessível pela internet, a API sobe, mas o chat/RAG não funciona
+- com `HF_TOKEN`, a API passa a usar um provider online para chat e embeddings sem depender de Ollama
+- sem `HF_TOKEN` e sem `OLLAMA_BASE_URL` acessível, a API sobe, mas o chat entra em modo de fallback estruturado
 
 Exemplo de fluxo com `gcloud`:
 

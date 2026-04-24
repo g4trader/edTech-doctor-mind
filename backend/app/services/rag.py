@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.domain import RagChunk
-from app.services.ollama_client import OllamaError, ollama_embed
+from app.services.llm_client import LLMError, embed_text
 
 
 async def retrieve_context(
@@ -15,8 +15,8 @@ async def retrieve_context(
     Retorna texto de contexto para o prompt e metadados das fontes citadas.
     """
     try:
-        q_emb = await ollama_embed(query)
-    except OllamaError:
+        q_emb = await embed_text(query)
+    except LLMError:
         return "", []
 
     dist = RagChunk.embedding.cosine_distance(q_emb)
@@ -101,8 +101,8 @@ async def seed_rag_if_empty(session: AsyncSession) -> None:
 
     for s in samples:
         try:
-            emb = await ollama_embed(s["title"] + "\n\n" + s["content"])
-        except OllamaError:
+            emb = await embed_text(s["title"] + "\n\n" + s["content"])
+        except LLMError:
             continue
         session.add(
             RagChunk(

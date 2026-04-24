@@ -3,6 +3,8 @@ def test_health(client) -> None:
     assert r.status_code == 200
     data = r.json()
     assert data["status"] == "ok"
+    assert "ai" in data
+    assert "backend" in data
     assert "ollama" in data
 
 

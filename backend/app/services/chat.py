@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.domain import ChatMessage, ChatSession
-from app.services.ollama_client import OllamaError, ollama_chat
+from app.services.llm_client import LLMError, chat_completion
 from app.services.rag import retrieve_context
 
 SYSTEM_PROMPT = """Você é o Doctor Mind, assistente educacional para médicos em formação.
@@ -108,8 +108,8 @@ async def append_and_reply(
         )
 
     try:
-        answer_text = await ollama_chat(ollama_messages, system=augmented_system)
-    except OllamaError as e:
+        answer_text = await chat_completion(ollama_messages, system=augmented_system)
+    except LLMError as e:
         del e
         answer_text = _fallback_reply(user_text, specialty_slug, context_text, sources)
 
