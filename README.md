@@ -169,9 +169,9 @@ Observações:
 Exemplo de fluxo com `gcloud`:
 
 ```bash
-gcloud builds submit --tag gcr.io/SEU-PROJETO/doctor-mind-backend -f docker/backend.Dockerfile .
+gcloud builds submit --config cloudbuild.backend.yaml .
 gcloud run deploy doctor-mind-backend \
-  --image gcr.io/SEU-PROJETO/doctor-mind-backend \
+  --image us-central1-docker.pkg.dev/SEU-PROJETO/cloud-run-source-deploy/doctor-mind-backend:latest \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated
