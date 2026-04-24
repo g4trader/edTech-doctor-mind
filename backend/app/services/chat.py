@@ -18,6 +18,55 @@ Avisos obrigatórios:
 - Em emergências, priorize protocolos locais e suporte avançado."""
 
 
+def _fallback_reply(
+    user_text: str,
+    specialty_slug: str | None,
+    context_text: str,
+    sources: list[dict],
+) -> str:
+    specialty_label = specialty_slug.replace("-", " ") if specialty_slug else "sua área de foco"
+    lines = [
+        "Estou em modo de orientação estruturada porque o modelo generativo externo não está disponível agora.",
+        f"Mesmo assim, consigo te ajudar a organizar o estudo em {specialty_label}.",
+    ]
+
+    if sources:
+        lines.extend(
+            [
+                "",
+                "Pontos-base recuperados para orientar a próxima ação:",
+            ]
+        )
+        for source in sources[:3]:
+            lines.append(f"- {source['title']}")
+    elif context_text:
+        lines.extend(
+            [
+                "",
+                "Há contexto recuperado da base para esta pergunta. Use-o como revisão prioritária antes do próximo simulado.",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "Próximo passo sugerido:",
+            "- identifique o tema clínico principal da sua pergunta;",
+            "- revise o conteúdo correspondente na biblioteca;",
+            "- resolva um simulado dessa especialidade logo depois;",
+            "- volte ao agente com o resultado para recalibrar a trilha.",
+            "",
+            f"Sua última mensagem foi: \"{user_text[:240]}\"",
+            "Se quiser, reformule pedindo em um destes formatos:",
+            "- \"Monte uma trilha de 2 semanas para este tema\"",
+            "- \"Simule uma prova oral sobre este assunto\"",
+            "- \"Explique meus erros e diga o que revisar primeiro\"",
+        ]
+    )
+
+    return "\n".join(lines)
+
+
 async def append_and_reply(
     session: AsyncSession,
     chat_session_id: UUID,
@@ -61,12 +110,8 @@ async def append_and_reply(
     try:
         answer_text = await ollama_chat(ollama_messages, system=augmented_system)
     except OllamaError as e:
-        answer_text = (
-            "Não foi possível contatar o modelo local (Ollama). "
-            "Verifique se o Ollama está em execução e se os modelos "
-            f"'llama3.2' e 'nomic-embed-text' estão instalados. Detalhe: {e}"
-        )
-        sources = []
+        del e
+        answer_text = _fallback_reply(user_text, specialty_slug, context_text, sources)
 
     asst = ChatMessage(
         session_id=chat_session_id, role="assistant", content=answer_text
