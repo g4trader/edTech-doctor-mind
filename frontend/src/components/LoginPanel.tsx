@@ -96,48 +96,61 @@ export function LoginPanel() {
           </button>
         </div>
 
-        <div className="mt-6 space-y-4">
-          {mode === "register" && (
+        <form
+          className="mt-6"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="space-y-4">
+            {mode === "register" && (
+              <label className="block text-sm text-[var(--dm-muted)]">
+                Nome completo
+                <input
+                  name="full_name"
+                  autoComplete="name"
+                  className="mt-1 w-full rounded-2xl border border-[var(--dm-border)] bg-[var(--dm-bg)] px-4 py-3 text-[var(--dm-fg)] outline-none focus:ring-2 focus:ring-[var(--dm-accent)]"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                />
+              </label>
+            )}
+
             <label className="block text-sm text-[var(--dm-muted)]">
-              Nome completo
+              E-mail
               <input
+                name="email"
+                autoComplete="email"
                 className="mt-1 w-full rounded-2xl border border-[var(--dm-border)] bg-[var(--dm-bg)] px-4 py-3 text-[var(--dm-fg)] outline-none focus:ring-2 focus:ring-[var(--dm-accent)]"
-                value={fullName}
-                onChange={(event) => setFullName(event.target.value)}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
               />
             </label>
-          )}
 
-          <label className="block text-sm text-[var(--dm-muted)]">
-            E-mail
-            <input
-              className="mt-1 w-full rounded-2xl border border-[var(--dm-border)] bg-[var(--dm-bg)] px-4 py-3 text-[var(--dm-fg)] outline-none focus:ring-2 focus:ring-[var(--dm-accent)]"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
+            <label className="block text-sm text-[var(--dm-muted)]">
+              Senha
+              <input
+                name="password"
+                type="password"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                className="mt-1 w-full rounded-2xl border border-[var(--dm-border)] bg-[var(--dm-bg)] px-4 py-3 text-[var(--dm-fg)] outline-none focus:ring-2 focus:ring-[var(--dm-accent)]"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+          </div>
 
-          <label className="block text-sm text-[var(--dm-muted)]">
-            Senha
-            <input
-              type="password"
-              className="mt-1 w-full rounded-2xl border border-[var(--dm-border)] bg-[var(--dm-bg)] px-4 py-3 text-[var(--dm-fg)] outline-none focus:ring-2 focus:ring-[var(--dm-accent)]"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-        </div>
+          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-
-        <button
-          type="button"
-          onClick={() => void submit()}
-          disabled={loading}
-          className="mt-6 w-full rounded-2xl bg-[var(--dm-accent)] px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {loading ? "Processando..." : mode === "login" ? "Entrar na plataforma" : "Criar conta e começar"}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-2xl bg-[var(--dm-accent)] px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {loading ? "Processando..." : mode === "login" ? "Entrar na plataforma" : "Criar conta e começar"}
+          </button>
+        </form>
 
         <div className="mt-6 rounded-2xl border border-dashed border-[var(--dm-border)] px-4 py-4 text-sm text-[var(--dm-muted)]">
           <p className="font-medium text-[var(--dm-fg)]">Acesso demo</p>
