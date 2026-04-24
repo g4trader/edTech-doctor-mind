@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -77,18 +78,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
-  const applySession = (payload: { user: User; subscription: Subscription | null }) => {
-    setUser(payload.user);
-    setSubscription(payload.subscription);
-  };
+  const applySession = useCallback(
+    (payload: { user: User; subscription: Subscription | null }) => {
+      setUser(payload.user);
+      setSubscription(payload.subscription);
+    },
+    [],
+  );
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     clearStoredToken();
     setUser(null);
     setSubscription(null);
-  };
+  }, []);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const token = getStoredToken();
     if (!token) {
       clearSession();
@@ -103,13 +107,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setReady(true);
     }
-  };
+  }, [applySession, clearSession]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
-  const login = async (input: LoginInput) => {
+  const login = useCallback(async (input: LoginInput) => {
     const data = await apiJson<AuthResponse>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(input),
@@ -118,9 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(data.token);
     applySession(data);
     setReady(true);
-  };
+  }, [applySession]);
 
-  const register = async (input: RegisterInput) => {
+  const register = useCallback(async (input: RegisterInput) => {
     const data = await apiJson<AuthResponse>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(input),
@@ -129,9 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(data.token);
     applySession(data);
     setReady(true);
-  };
+  }, [applySession]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     const token = getStoredToken();
     try {
       if (token) {
@@ -146,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearSession();
       setReady(true);
     }
-  };
+  }, [clearSession]);
 
   const value = useMemo(
     () => ({
