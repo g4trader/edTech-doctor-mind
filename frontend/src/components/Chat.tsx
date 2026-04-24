@@ -1,17 +1,33 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiJson } from "@/lib/api";
 
 type Msg = { id: string; role: string; content: string; created_at: string };
+type QuickAction = { label: string; prompt: string };
 
 const STORAGE_KEY = "doctor-mind-session";
 
-export function Chat() {
+export function Chat({
+  title,
+  description,
+  defaultSpecialty = "",
+  quickActions = [],
+  stickyComposer = true,
+  emptyState,
+}: {
+  title?: string;
+  description?: string;
+  defaultSpecialty?: string;
+  quickActions?: QuickAction[];
+  stickyComposer?: boolean;
+  emptyState?: ReactNode;
+}) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
-  const [specialty, setSpecialty] = useState<string>("");
+  const [specialty, setSpecialty] = useState<string>(defaultSpecialty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [boot, setBoot] = useState(true);
@@ -24,6 +40,11 @@ export function Chat() {
   useEffect(() => {
     scrollToEnd();
   }, [messages]);
+
+  useEffect(() => {
+    if (!defaultSpecialty) return;
+    setSpecialty((current) => current || defaultSpecialty);
+  }, [defaultSpecialty]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,8 +89,8 @@ export function Chat() {
     };
   }, []);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const send = useCallback(async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || !sessionId || loading) return;
     setLoading(true);
     setError(null);
@@ -111,10 +132,19 @@ export function Chat() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col">
+    <div className={`flex flex-col ${stickyComposer ? "min-h-[calc(100dvh-4rem)]" : "min-h-[720px]"}`}>
+      {(title || description) && (
+        <div className="mb-4 rounded-[28px] border border-[var(--dm-border)] bg-[var(--dm-surface)] p-5">
+          {title && <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>}
+          {description && (
+            <p className="mt-2 text-sm leading-7 text-[var(--dm-muted)]">{description}</p>
+          )}
+        </div>
+      )}
+
       <p className="mb-4 text-sm leading-relaxed text-[var(--dm-muted)]">
-        Pergunte sobre condutas, prescrições e raciocínio clínico. O contexto da
-        base é recuperado automaticamente; confirme sempre com protocolos locais
+        Use o agente para interpretar desempenho, revisar condutas, simular prova oral
+        e reorganizar a sua sequência de estudo. Confirme sempre com protocolos locais
         e bulas.
       </p>
 
@@ -128,11 +158,29 @@ export function Chat() {
         />
       </label>
 
-      <div className="flex-1 space-y-3 overflow-y-auto pb-28">
+      {quickActions.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              disabled={loading || !sessionId}
+              onClick={() => void send(action.prompt)}
+              className="rounded-full border border-[var(--dm-border)] bg-[var(--dm-surface)] px-4 py-2 text-sm font-medium text-[var(--dm-fg)] transition hover:border-[var(--dm-accent)] hover:text-[var(--dm-accent)] disabled:opacity-50"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className={`flex-1 space-y-3 overflow-y-auto ${stickyComposer ? "pb-28" : "pb-6"}`}>
         {messages.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-[var(--dm-border)] bg-[var(--dm-surface)] px-4 py-8 text-center text-sm text-[var(--dm-muted)]">
-            Ex.: “Como iniciar anti-hipertensivo em paciente jovem assintomático?”
-          </div>
+          emptyState ?? (
+            <div className="rounded-2xl border border-dashed border-[var(--dm-border)] bg-[var(--dm-surface)] px-4 py-8 text-center text-sm text-[var(--dm-muted)]">
+              Ex.: “Analise minhas áreas mais fracas e monte a próxima semana de estudo.”
+            </div>
+          )
         )}
         {messages.map((m) => (
           <div
@@ -157,7 +205,13 @@ export function Chat() {
         <p className="mb-2 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-[var(--dm-border)] bg-[var(--dm-bg)]/95 p-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0">
+      <div
+        className={
+          stickyComposer
+            ? "fixed bottom-0 left-0 right-0 border-t border-[var(--dm-border)] bg-[var(--dm-bg)]/95 p-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0"
+            : "border-t border-[var(--dm-border)] pt-4"
+        }
+      >
         <div className="mx-auto flex max-w-3xl gap-2">
           <textarea
             rows={1}
