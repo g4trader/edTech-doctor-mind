@@ -129,6 +129,15 @@ Arquitetura alvo:
 
 Crie um projeto Vercel com **Root Directory** = `frontend`.
 
+Arquivos relevantes para a importação/configuração:
+
+- `package.json` na raiz marca o repositório como workspace npm
+- `frontend/vercel.json` fixa o projeto do frontend como `Next.js`
+
+Observação:
+
+- a **Root Directory** ainda é uma configuração do projeto na Vercel; ela não é definida por `vercel.json`
+
 Variável obrigatória:
 
 ```bash
