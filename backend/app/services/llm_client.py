@@ -15,6 +15,12 @@ def _raise_bad_backend() -> None:
     raise LLMError(f"Backend de IA não suportado: {settings.resolved_ai_backend}")
 
 
+def _gemini_headers() -> dict[str, str]:
+    if not settings.gemini_api_key:
+        raise LLMError("GEMINI_API_KEY não configurado")
+    return {"x-goog-api-key": settings.gemini_api_key}
+
+
 async def _ollama_embed(text: str) -> list[float]:
     url = f"{settings.ollama_base_url.rstrip('/')}/api/embeddings"
     payload = {"model": settings.ollama_embed_model, "prompt": text}
@@ -53,6 +59,38 @@ def _mean_pool_embedding(data: Sequence[Any]) -> list[float]:
     raise LLMError("Formato de embedding não suportado")
 
 
+async def _gemini_embed(
+    text: str,
+    *,
+    task_type: str | None = None,
+    title: str | None = None,
+) -> list[float]:
+    payload: dict[str, Any] = {
+        "content": {"parts": [{"text": text}]},
+        "outputDimensionality": 768,
+    }
+    if task_type:
+        payload["taskType"] = task_type
+    if title:
+        payload["title"] = title
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        try:
+            r = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_embed_model}:embedContent",
+                headers=_gemini_headers(),
+                json=payload,
+            )
+        except httpx.RequestError as e:
+            raise LLMError(str(e)) from e
+        if r.status_code != 200:
+            raise LLMError(f"Embeddings failed: {r.status_code} {r.text}")
+        data = r.json()
+        values = ((data.get("embedding") or {}).get("values")) or []
+        if not values:
+            raise LLMError("No embedding in response")
+        return [float(v) for v in values]
+
+
 async def _hf_embed(text: str) -> list[float]:
     if not settings.hf_token:
         raise LLMError("HF_TOKEN não configurado")
@@ -67,13 +105,63 @@ async def _hf_embed(text: str) -> list[float]:
     return _mean_pool_embedding(embedding)
 
 
-async def embed_text(text: str) -> list[float]:
+async def embed_text(
+    text: str,
+    *,
+    task_type: str | None = None,
+    title: str | None = None,
+) -> list[float]:
     backend = settings.resolved_ai_backend
+    if backend == "gemini":
+        return await _gemini_embed(text, task_type=task_type, title=title)
     if backend == "ollama":
         return await _ollama_embed(text)
     if backend == "huggingface":
         return await _hf_embed(text)
     _raise_bad_backend()
+
+
+async def _gemini_chat(
+    messages: list[dict[str, str]],
+    system: str | None = None,
+) -> str:
+    contents: list[dict[str, Any]] = []
+    for message in messages:
+        role = "model" if message["role"] == "assistant" else "user"
+        contents.append({"role": role, "parts": [{"text": message["content"]}]})
+
+    payload: dict[str, Any] = {
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.3,
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
+    }
+    if system:
+        payload["systemInstruction"] = {"parts": [{"text": system}]}
+
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        try:
+            r = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_chat_model}:generateContent",
+                headers=_gemini_headers(),
+                json=payload,
+            )
+        except httpx.RequestError as e:
+            raise LLMError(str(e)) from e
+        if r.status_code != 200:
+            raise LLMError(f"Chat failed: {r.status_code} {r.text}")
+        data = r.json()
+        candidates = data.get("candidates") or []
+        if not candidates:
+            raise LLMError("Empty model response")
+        parts = (((candidates[0] or {}).get("content") or {}).get("parts")) or []
+        content = "\n".join(
+            part.get("text", "").strip() for part in parts if part.get("text")
+        ).strip()
+        if not content:
+            raise LLMError("Empty model response")
+        return content
 
 
 async def _ollama_chat(
@@ -149,6 +237,8 @@ async def chat_completion(
     system: str | None = None,
 ) -> str:
     backend = settings.resolved_ai_backend
+    if backend == "gemini":
+        return await _gemini_chat(messages, system=system)
     if backend == "ollama":
         return await _ollama_chat(messages, system=system)
     if backend == "huggingface":
@@ -159,6 +249,8 @@ async def chat_completion(
 async def ai_health() -> bool:
     backend = settings.resolved_ai_backend
     try:
+        if backend == "gemini":
+            return bool(settings.gemini_api_key)
         if backend == "huggingface":
             return bool(settings.hf_token)
         if backend == "ollama":

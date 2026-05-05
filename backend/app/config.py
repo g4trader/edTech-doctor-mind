@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     auto_seed_demo_data: bool = True
 
     ai_backend: str = "auto"
+    gemini_api_key: str | None = None
+    gemini_chat_model: str = "gemini-2.5-flash"
+    gemini_embed_model: str = "gemini-embedding-001"
     hf_token: str | None = None
     hf_chat_model: str = "meta-llama/Llama-3.1-8B-Instruct:cerebras"
     hf_embed_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
@@ -42,7 +45,11 @@ class Settings(BaseSettings):
     def resolved_ai_backend(self) -> str:
         backend = self.ai_backend.strip().lower()
         if backend == "auto":
-            return "huggingface" if self.hf_token else "ollama"
+            if self.gemini_api_key:
+                return "gemini"
+            if self.hf_token:
+                return "huggingface"
+            return "ollama"
         return backend
 
 

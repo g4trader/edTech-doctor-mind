@@ -9,7 +9,7 @@ Plataforma EdTech de medicina em formato de assinatura. O aluno acessa **conteú
 | Frontend | React, Next.js 15 (App Router), Tailwind |
 | Backend | Python 3.12+, FastAPI, SQLAlchemy async |
 | SQL | PostgreSQL 16 com extensão **pgvector** |
-| IA | **Hugging Face Inference Providers** (gratuito para teste, online) ou **Ollama** (local) |
+| IA | **Gemini Developer API** (free tier para dev), **Hugging Face** (online) ou **Ollama** (local) |
 
 ## Pré-requisitos
 
@@ -17,10 +17,24 @@ Plataforma EdTech de medicina em formato de assinatura. O aluno acessa **conteú
 - Python 3.12+
 - Node.js 18+ (recomendado 20+)
 - Uma destas opções:
+  - [Google AI Studio / Gemini Developer API](https://ai.google.dev/) com `GEMINI_API_KEY`
   - [Hugging Face](https://huggingface.co) com `HF_TOKEN` para usar IA online
   - [Ollama](https://ollama.com) instalado e em execução para uso local
 
-### Opção A: Hugging Face (online)
+### Opção A: Gemini Developer API (online)
+
+Preencha em `backend/.env`:
+
+```bash
+AI_BACKEND=auto
+GEMINI_API_KEY=AIza...
+GEMINI_CHAT_MODEL=gemini-2.5-flash
+GEMINI_EMBED_MODEL=gemini-embedding-001
+```
+
+Com `AI_BACKEND=auto`, o backend usa Gemini quando `GEMINI_API_KEY` existe; se não existir, tenta Hugging Face e depois Ollama.
+
+### Opção B: Hugging Face (online)
 
 Preencha em `backend/.env`:
 
@@ -31,9 +45,9 @@ HF_CHAT_MODEL=meta-llama/Llama-3.1-8B-Instruct:cerebras
 HF_EMBED_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 ```
 
-Com `AI_BACKEND=auto`, o backend usa Hugging Face quando `HF_TOKEN` existe; sem token, cai para Ollama.
+Com `AI_BACKEND=auto`, o backend usa Hugging Face quando `HF_TOKEN` existe e `GEMINI_API_KEY` não existe.
 
-### Opção B: Modelos Ollama (gratuitos, locais)
+### Opção C: Modelos Ollama (gratuitos, locais)
 
 ```bash
 ollama pull llama3.2
@@ -131,8 +145,8 @@ Senha: admin12345
 - `db` usa PostgreSQL 16 com `pgvector`
 - `backend` expõe a API FastAPI em `:8000`
 - `frontend` sobe o Next.js em `:3000`
-- com `HF_TOKEN`, o backend usa IA online
-- sem `HF_TOKEN`, o backend aponta para `host.docker.internal:11434` para encontrar o Ollama do host quando ele estiver rodando
+- com `GEMINI_API_KEY` ou `HF_TOKEN`, o backend usa IA online
+- sem credencial online, o backend aponta para `host.docker.internal:11434` para encontrar o Ollama do host quando ele estiver rodando
 
 ## Deploy
 
@@ -185,6 +199,9 @@ OLLAMA_CHAT_MODEL=llama3.2
 OLLAMA_EMBED_MODEL=nomic-embed-text
 
 AI_BACKEND=auto
+GEMINI_API_KEY=AIza...
+GEMINI_CHAT_MODEL=gemini-2.5-flash
+GEMINI_EMBED_MODEL=gemini-embedding-001
 HF_TOKEN=hf_xxx
 HF_CHAT_MODEL=meta-llama/Llama-3.1-8B-Instruct:cerebras
 HF_EMBED_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
@@ -194,8 +211,9 @@ Observações:
 
 - `DATABASE_URL` precisa apontar para PostgreSQL com extensão `pgvector`
 - `AUTO_INIT_DB` e `AUTO_SEED_DEMO_DATA` podem ser desligados após a inicialização inicial
-- com `HF_TOKEN`, a API passa a usar um provider online para chat e embeddings sem depender de Ollama
-- sem `HF_TOKEN` e sem `OLLAMA_BASE_URL` acessível, a API sobe, mas o chat entra em modo de fallback estruturado
+- com `GEMINI_API_KEY`, a API usa a Gemini Developer API, incluindo chat e embeddings
+- com `HF_TOKEN`, a API usa Hugging Face quando não houver `GEMINI_API_KEY`
+- sem credencial online e sem `OLLAMA_BASE_URL` acessível, a API sobe, mas o chat entra em modo de fallback estruturado
 
 Exemplo de fluxo com `gcloud`:
 

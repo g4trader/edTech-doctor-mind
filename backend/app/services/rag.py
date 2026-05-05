@@ -15,7 +15,7 @@ async def retrieve_context(
     Retorna texto de contexto para o prompt e metadados das fontes citadas.
     """
     try:
-        q_emb = await embed_text(query)
+        q_emb = await embed_text(query, task_type="RETRIEVAL_QUERY")
     except LLMError:
         return "", []
 
@@ -101,7 +101,11 @@ async def seed_rag_if_empty(session: AsyncSession) -> None:
 
     for s in samples:
         try:
-            emb = await embed_text(s["title"] + "\n\n" + s["content"])
+            emb = await embed_text(
+                s["title"] + "\n\n" + s["content"],
+                task_type="RETRIEVAL_DOCUMENT",
+                title=s["title"],
+            )
         except LLMError:
             continue
         session.add(
