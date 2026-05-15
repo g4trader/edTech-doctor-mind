@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Mind — Plano de Negócio | EdTech Médica com IA</title>
+  <meta name="description" content="Doctor Mind: plataforma de EdTech médica com IA, RAG, diagnóstico de gaps, plano de estudos adaptativo, mentorias premium e recorrência SaaS." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060b16;
+      --bg-soft: #0b1220;
+      --card: rgba(255, 255, 255, 0.075);
+      --card-strong: rgba(255, 255, 255, 0.12);
+      --line: rgba(255, 255, 255, 0.13);
+      --text: #f8fafc;
+      --muted: #a7b4c8;
+      --muted-2: #7b8aa0;
+      --brand: #38bdf8;
+      --brand-2: #22c55e;
+      --brand-3: #a78bfa;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+      --shadow: 0 30px 100px rgba(0,0,0,.42);
+      --radius: 28px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(56,189,248,.22), transparent 34%),
+        radial-gradient(circle at 85% 5%, rgba(167,139,250,.22), transparent 30%),
+        radial-gradient(circle at 55% 40%, rgba(34,197,94,.08), transparent 42%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.75), transparent 70%);
+      z-index: -1;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(18px);
+      background: rgba(6, 11, 22, .72);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      font-size: 1.22rem;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 40px rgba(56,189,248,.28);
+    }
+
+    .logo-mark span { color: #04111f; font-weight: 900; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: var(--muted);
+      font-size: .93rem;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 13px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      background: rgba(255,255,255,.08);
+      transition: .25s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.13); }
+
+    .btn-primary {
+      border: none;
+      color: #04111f;
+      background: linear-gradient(135deg, #7dd3fc, #22c55e);
+      box-shadow: 0 18px 55px rgba(34,197,94,.22);
+    }
+
+    .hero {
+      padding: 88px 0 72px;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 42px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 13px;
+      border: 1px solid rgba(125,211,252,.26);
+      border-radius: 999px;
+      background: rgba(56,189,248,.1);
+      color: #c7eeff;
+      font-size: .84rem;
+      font-weight: 800;
+      margin-bottom: 22px;
+    }
+
+    .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--brand-2);
+      box-shadow: 0 0 0 8px rgba(34,197,94,.13);
+    }
+
+    h1, h2, h3 { margin: 0; letter-spacing: -0.055em; line-height: 1.02; }
+
+    h1 {
+      font-size: clamp(3rem, 7vw, 6.6rem);
+      max-width: 900px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 10%, #7dd3fc 45%, #86efac 85%);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: clamp(1.05rem, 1.8vw, 1.28rem);
+      max-width: 760px;
+      margin: 26px 0 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .hero-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.055));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: radial-gradient(circle at 20% 10%, rgba(56,189,248,.24), transparent 30%), radial-gradient(circle at 90% 90%, rgba(34,197,94,.18), transparent 36%);
+      pointer-events: none;
+    }
+
+    .ai-panel {
+      position: relative;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 700;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #bbf7d0;
+      font-size: .82rem;
+      font-weight: 900;
+    }
+
+    .glass-box {
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(5, 10, 20, .54);
+      border: 1px solid rgba(255,255,255,.11);
+    }
+
+    .glass-box strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .86rem;
+      color: #e2e8f0;
+    }
+
+    .glass-box ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .mini-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .mini-kpi {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255,255,255,.065);
+    }
+
+    .mini-kpi b {
+      display: block;
+      font-size: 1.55rem;
+      letter-spacing: -0.05em;
+    }
+
+    .mini-kpi span {
+      color: var(--muted-2);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    section { padding: 74px 0; }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 32px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(2.1rem, 4vw, 4.2rem);
+      max-width: 780px;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      max-width: 390px;
+      margin: 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 26px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.16);
+    }
+
+    .card h3 {
+      font-size: 1.42rem;
+      margin-bottom: 12px;
+    }
+
+    .card p, .card li {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .card ul { padding-left: 20px; margin: 12px 0 0; }
+
+    .big-number {
+      font-size: clamp(2.4rem, 5vw, 4.7rem);
+      line-height: .95;
+      letter-spacing: -0.07em;
+      font-weight: 900;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff, #7dd3fc 60%, #86efac);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(56,189,248,.11);
+      border: 1px solid rgba(56,189,248,.18);
+      color: #c7eeff;
+      font-weight: 800;
+      font-size: .78rem;
+      margin-bottom: 14px;
+    }
+
+    .problem-solution {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 18px;
+    }
+
+    .dark-card {
+      background: rgba(3, 7, 18, .62);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .flow-step {
+      position: relative;
+      padding: 22px;
+      min-height: 190px;
+      border-radius: 26px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid var(--line);
+    }
+
+    .flow-step b {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      color: #06111e;
+      background: linear-gradient(135deg, #7dd3fc, #86efac);
+      margin-bottom: 18px;
+    }
+
+    .flow-step h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    .flow-step p {
+      color: var(--muted);
+      font-size: .9rem;
+      margin: 0;
+    }
+
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .price-card {
+      padding: 24px;
+      border-radius: 28px;
+      background: rgba(255,255,255,.075);
+      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg, rgba(56,189,248,.18), rgba(255,255,255,.08));
+      border-color: rgba(125,211,252,.38);
+      transform: translateY(-10px);
+    }
+
+    .price-card h3 { font-size: 1.22rem; }
+
+    .price {
+      margin: 18px 0;
+      font-size: 2.4rem;
+      letter-spacing: -0.07em;
+      font-weight: 900;
+    }
+
+    .price small {
+      font-size: .86rem;
+      color: var(--muted);
+      letter-spacing: -0.02em;
+      font-weight: 700;
+    }
+
+    .price-card ul {
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .projection-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+    }
+
+    .projection-table th,
+    .projection-table td {
+      padding: 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .projection-table th {
+      background: rgba(255,255,255,.09);
+      color: #e2e8f0;
+      font-size: .85rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .projection-table td {
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+    }
+
+    .projection-table td strong { color: var(--text); }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 16px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 18px;
+      padding: 22px;
+      border-radius: 26px;
+      background: rgba(255,255,255,.065);
+      border: 1px solid var(--line);
+    }
+
+    .date {
+      color: #bbf7d0;
+      font-weight: 900;
+    }
+
+    .timeline-item h3 { font-size: 1.22rem; margin-bottom: 6px; }
+    .timeline-item p { margin: 0; color: var(--muted); }
+
+    .cta {
+      padding: 88px 0;
+    }
+
+    .cta-box {
+      border-radius: 36px;
+      padding: clamp(34px, 6vw, 72px);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(56,189,248,.28), transparent 34%),
+        radial-gradient(circle at 80% 80%, rgba(34,197,94,.22), transparent 40%),
+        rgba(255,255,255,.085);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .cta-box h2 {
+      font-size: clamp(2.3rem, 5vw, 5.2rem);
+      max-width: 900px;
+      margin: 0 auto 18px;
+    }
+
+    .cta-box p {
+      color: var(--muted);
+      max-width: 720px;
+      margin: 0 auto 28px;
+      font-size: 1.1rem;
+    }
+
+    footer {
+      padding: 34px 0 56px;
+      color: var(--muted-2);
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .problem-solution,
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3, .pricing { grid-template-columns: repeat(2, 1fr); }
+      .flow { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 16px; }
+      .price-card.featured { transform: none; }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(100% - 28px, var(--max)); }
+      .hero { padding-top: 58px; }
+      .grid-3, .pricing, .flow, .mini-kpis { grid-template-columns: 1fr; }
+      .timeline-item { grid-template-columns: 1fr; }
+      .projection-table { font-size: .86rem; }
+      .projection-table th, .projection-table td { padding: 13px; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="#top" class="logo" aria-label="Doctor Mind">
+        <div class="logo-mark"><span>DM</span></div>
+        <span>Doctor Mind</span>
+      </a>
+      <div class="nav-links">
+        <a href="#mercado">Mercado</a>
+        <a href="#produto">Produto</a>
+        <a href="#receita">Receita</a>
+        <a href="#roadmap">Roadmap</a>
+      </div>
+      <a class="btn btn-primary" href="#projecoes">Ver projeções</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="container hero-grid">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> EdTech médica com IA, RAG e curadoria especializada</div>
+        <h1><span class="gradient-text">O copiloto de evolução médica</span> para estudar com diagnóstico, plano e correção de rota.</h1>
+        <p>
+          A Doctor Mind conecta provas, lacunas, conteúdo, chat educacional, mentoria e dashboard em um único fluxo. O aluno deixa de estudar por impulso e passa a evoluir com inteligência, prioridade e acompanhamento real.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#receita">Modelo de negócio</a>
+          <a class="btn" href="#produto">Como funciona</a>
+        </div>
+        <div class="mini-kpis">
+          <div class="mini-kpi"><b>575k+</b><span>médicos no Brasil</span></div>
+          <div class="mini-kpi"><b>250k+</b><span>estudantes de medicina</span></div>
+          <div class="mini-kpi"><b>R$100M+</b><span>potencial ARR em escala</span></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="ai-panel">
+          <div class="panel-head">
+            <span>Agente ativo</span>
+            <span class="status"><span class="pulse"></span> Diagnóstico em execução</span>
+          </div>
+          <div class="glass-box">
+            <strong>O que o agente lê</strong>
+            <ul>
+              <li>Meta: consolidar Clínica Médica para prova.</li>
+              <li>Disponibilidade: 6 horas por semana.</li>
+              <li>Lacunas: emergência, nefrologia e infectologia.</li>
+            </ul>
+          </div>
+          <div class="glass-box">
+            <strong>O que o agente entrega</strong>
+            <ul>
+              <li>Prioridade baseada em peso e domínio.</li>
+              <li>Plano semanal com revisão, conteúdo e questões.</li>
+              <li>Correção da rota após cada novo simulado.</li>
+            </ul>
+          </div>
+          <div class="grid-3">
+            <div class="card dark-card"><span class="tag">Gap</span><p>Diagnóstico por tema</p></div>
+            <div class="card dark-card"><span class="tag">Plano</span><p>Estudo semanal pronto</p></div>
+            <div class="card dark-card"><span class="tag">IA</span><p>Explicação dos erros</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="mercado">
+      <div class="container">
+        <div class="section-head">
+          <h2>Big numbers de um mercado grande, recorrente e premium.</h2>
+          <p>Educação médica combina alto ticket, atualização contínua, competitividade intensa e forte disposição de pagamento.</p>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="big-number">575k+</div>
+            <h3>Médicos ativos</h3>
+            <p>Base profissional ampla para atualização, provas de título, especialização, residência e educação continuada.</p>
+          </div>
+          <div class="card">
+            <div class="big-number">250k+</div>
+            <h3>Estudantes</h3>
+            <p>Público em formação, com demanda constante por organização, revisão, simulados e direcionamento.</p>
+          </div>
+          <div class="card">
+            <div class="big-number">390+</div>
+            <h3>Escolas médicas</h3>
+            <p>Expansão do ensino médico amplia a competição e cria espaço para plataformas inteligentes de performance.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container problem-solution">
+        <div class="card dark-card">
+          <span class="tag">Problema</span>
+          <h2>O maior desperdício não é estudar pouco. É estudar sem direção.</h2>
+          <ul>
+            <li>Conteúdo espalhado em várias ferramentas.</li>
+            <li>Provas que medem nota, mas não entregam rota.</li>
+            <li>Revisão por impulso, sem prioridade clara.</li>
+            <li>Chats genéricos sem contexto real do aluno.</li>
+            <li>Baixa visibilidade de evolução ao longo do tempo.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag">Solução</span>
+          <h2>A plataforma decide o que merece atenção agora.</h2>
+          <p>
+            A Doctor Mind lê desempenho, meta, proficiência e disponibilidade semanal antes de sugerir o próximo passo. O estudo deixa de ser uma coleção de tarefas soltas e vira um sistema de evolução mensurável.
+          </p>
+          <ul>
+            <li>Diagnóstico por desempenho real.</li>
+            <li>Plano de estudo gerado em minutos.</li>
+            <li>Correção contínua após cada novo resultado.</li>
+            <li>Conteúdo, prova, chat e mentoria no mesmo ecossistema.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="produto">
+      <div class="container">
+        <div class="section-head">
+          <h2>Um sistema operacional de estudo médico.</h2>
+          <p>O diferencial está em integrar diagnóstico, prova, IA, plano, conteúdo, acompanhamento e mentoria em um único fluxo.</p>
+        </div>
+        <div class="flow">
+          <div class="flow-step"><b>01</b><h3>Meta</h3><p>O aluno define especialidade, prova, prazo e disponibilidade.</p></div>
+          <div class="flow-step"><b>02</b><h3>Diagnóstico</h3><p>Provas e testes revelam lacunas com peso real.</p></div>
+          <div class="flow-step"><b>03</b><h3>Agente IA</h3><p>O sistema identifica prioridade, profundidade e sequência.</p></div>
+          <div class="flow-step"><b>04</b><h3>Plano</h3><p>Rotina semanal com revisão, conteúdo e questões.</p></div>
+          <div class="flow-step"><b>05</b><h3>Correção</h3><p>Cada novo simulado reorganiza a rota de estudo.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="receita">
+      <div class="container">
+        <div class="section-head">
+          <h2>Modelo de receita com recorrência SaaS e camada premium.</h2>
+          <p>Planos de plataforma capturam uso recorrente. Mentorias premium elevam margem, LTV e percepção de autoridade.</p>
+        </div>
+        <div class="pricing">
+          <div class="price-card">
+            <h3>Essential</h3>
+            <div class="price">R$ 99<small>/mês</small></div>
+            <ul>
+              <li>Conteúdos essenciais</li>
+              <li>Testes básicos</li>
+              <li>Plano inicial</li>
+              <li>Dashboard simples</li>
+            </ul>
+          </div>
+          <div class="price-card featured">
+            <h3>Professional</h3>
+            <div class="price">R$ 247<small>/mês</small></div>
+            <ul>
+              <li>Diagnóstico avançado</li>
+              <li>Simulados conectados</li>
+              <li>Plano adaptativo</li>
+              <li>Chat educacional</li>
+            </ul>
+          </div>
+          <div class="price-card">
+            <h3>Advanced</h3>
+            <div class="price">R$ 599<small>/mês</small></div>
+            <ul>
+              <li>Análises profundas</li>
+              <li>Uso ampliado de IA</li>
+              <li>Relatórios de gaps</li>
+              <li>Prioridade de suporte</li>
+            </ul>
+          </div>
+          <div class="price-card">
+            <h3>Elite</h3>
+            <div class="price">R$ 1.457<small>/mês</small></div>
+            <ul>
+              <li>Camada premium</li>
+              <li>Insights avançados</li>
+              <li>Acompanhamento especial</li>
+              <li>Acesso prioritário</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="height:18px"></div>
+
+        <div class="grid-3">
+          <div class="card">
+            <span class="tag">Mentoria Premium</span>
+            <h3>R$ 5.999</h3>
+            <p>Entrada premium para grupos fechados, revisão estratégica e acompanhamento de performance.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Mentoria Advanced</span>
+            <h3>R$ 8.999</h3>
+            <p>Programa de aprofundamento com especialistas, encontros ao vivo e plano de evolução.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Mentoria Elite</span>
+            <h3>R$ 14.999</h3>
+            <p>Camada de alto valor para preparação intensiva, prova de título, residência e performance máxima.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="projecoes">
+      <div class="container">
+        <div class="section-head">
+          <h2>Projeções de recorrência e expansão premium.</h2>
+          <p>Mesmo com captura conservadora, o modelo combina MRR relevante, alto ARPU e receita adicional por mentorias.</p>
+        </div>
+        <table class="projection-table">
+          <thead>
+            <tr>
+              <th>Cenário</th>
+              <th>Usuários</th>
+              <th>Ticket médio</th>
+              <th>MRR estimado</th>
+              <th>ARR estimado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Conservador</strong></td>
+              <td>2.000</td>
+              <td>R$ 247</td>
+              <td><strong>R$ 494 mil</strong></td>
+              <td><strong>R$ 5,9 milhões</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Expansão</strong></td>
+              <td>8.000</td>
+              <td>R$ 347</td>
+              <td><strong>R$ 2,7 milhões</strong></td>
+              <td><strong>R$ 33 milhões+</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Consolidação</strong></td>
+              <td>20.000</td>
+              <td>R$ 497</td>
+              <td><strong>R$ 9,9 milhões</strong></td>
+              <td><strong>R$ 119 milhões+</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="height:18px"></div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="big-number">1%–3%</div>
+            <h3>Conversão em tráfego frio</h3>
+            <p>Faixa base para campanhas de aquisição, dependendo de oferta, criativo e maturidade do funil.</p>
+          </div>
+          <div class="card">
+            <div class="big-number">5%–12%</div>
+            <h3>Conversão em leads aquecidos</h3>
+            <p>Diagnósticos gratuitos, simulados e demonstrações da IA elevam intenção de compra.</p>
+          </div>
+          <div class="card">
+            <div class="big-number">R$13M+</div>
+            <h3>Mentorias em escala</h3>
+            <p>1.000 mentorias/ano com ticket médio de R$ 12.999 geram receita premium expressiva.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="container">
+        <div class="section-head">
+          <h2>Roadmap de execução até MVP comercial.</h2>
+          <p>O cronograma prioriza validação rápida, estruturação de IA/RAG, fluxo core funcional e expansão por feedback real.</p>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="date">15 Mai → 31 Mai</div>
+            <div><h3>Fase 0 — Protótipo</h3><p>Login simulado, home, conteúdo inicial, agente prova → diagnóstico, agente plano de estudos e dashboard esboço.</p></div>
+          </div>
+          <div class="timeline-item">
+            <div class="date">15 Mai → 06 Jun</div>
+            <div><h3>Fase 0 — Estruturação</h3><p>Infra, créditos, RAG/vector DB, inventário de questões, CI/CD, ambientes e modelagem de dados core.</p></div>
+          </div>
+          <div class="timeline-item">
+            <div class="date">02 Jun → 11 Jul</div>
+            <div><h3>Fase 1 — Build</h3><p>Auth, usuários, pipeline RAG, ETL, engine diagnóstica, identificação de gaps, frontend core e curadoria lote 1.</p></div>
+          </div>
+          <div class="timeline-item">
+            <div class="date">17 Jul → 31 Ago</div>
+            <div><h3>Fase 2 — Alpha</h3><p>Onboarding de até 100 usuários pioneiros, feedback estruturado, correções críticas e curadoria lote 2.</p></div>
+          </div>
+          <div class="timeline-item">
+            <div class="date">01 Set → MVP</div>
+            <div><h3>Fase 3 — Beta</h3><p>Dashboard completo, página do aluno, créditos, planos, gateway de pagamento, LP, checkout, CRM/ERP básico e curadoria lote 3.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <h2>Vantagem defensável: dados proprietários de evolução médica.</h2>
+          <p>O ativo de longo prazo não é apenas o conteúdo. É a inteligência construída sobre comportamento, gaps e progressão.</p>
+        </div>
+        <div class="grid-3">
+          <div class="card"><span class="tag">Dados</span><h3>Histórico educacional</h3><p>Cada prova, erro e revisão alimenta uma base de aprendizado personalizada e difícil de replicar.</p></div>
+          <div class="card"><span class="tag">IA</span><h3>Personalização crescente</h3><p>Quanto mais o aluno usa, melhor o diagnóstico, maior a retenção e mais forte o custo de saída.</p></div>
+          <div class="card"><span class="tag">Escala</span><h3>Expansão por especialidade</h3><p>Após validar o core, novas frentes médicas podem ser adicionadas com ganho operacional progressivo.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <div class="cta-box">
+          <h2>A próxima geração da educação médica será guiada por dados, IA e direção personalizada.</h2>
+          <p>
+            A Doctor Mind se posiciona no ponto de virada entre conteúdo estático e aprendizado adaptativo. Um negócio recorrente, escalável, premium e com alto potencial de consolidação no Brasil e na América Latina.
+          </p>
+          <a class="btn btn-primary" href="#top">Voltar ao topo</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <span>© 2026 Doctor Mind — EdTech Médica com IA</span>
+      <span>Plano de negócio executivo para apresentação, validação e captação.</span>
+    </div>
+  </footer>
+</body>
+</html>
